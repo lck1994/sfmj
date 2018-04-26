@@ -1,0 +1,30 @@
+
+1.匿名管道
+头文件： unistd.h
+函数 int pipe(int[2])
+用法：
+1.fork
+int fd[2] = {0};
+if(pipe(fd) == 0 )
+{
+  int ret = fork();
+  ret = 0
+    then read/write
+  ret != 0
+    then read/write
+}
+2.exec
+在exec时 传递 文件描述符
+新进程在 main 参数解析 即可 read write
+
+2.命名管道
+mkfifo(name,0777) 创建一个管道
+unlink(name) 删除管道
+进程可以以文件方式处理管道
+当没有以写方式打开管道 则执行读操作 会返回0 否则堵塞
+
+服务器：1个管道 客户端负责写
+负责读  客户端应传自己的pid
+让服务端处理之后知道 返回给谁
+
+客户端：1个管道 负责向服务器写 并在自己特有管道进行读
