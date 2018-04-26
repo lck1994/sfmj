@@ -1,0 +1,44 @@
+使用：pthread.h 定义宏_REENTRANT 编译时 链接库 -lpthread
+线程：拥有自己的栈
+与创建者进程关系：共享全局变量 文件描述符 信号处理函数 工作环境
+
+
+API:
+创建：int pthread_create(pthread_t*,pthread_attr_t*,void* (*fun)(void*),void*)
+返回：0成功
+
+初始化线程：pthread_attr_init 在创建完线程之后 pthread_attr_destory 回收
+控制线程的行为
+
+退出：void pthread_exit(void*)
+参数作为创建线程的入口函数的返回值
+该参数 生命应长于线程
+
+等待：int pthread_join(pthread_t,void**)
+第2个参数用于获取线程执行的返回值
+返回：0成功
+
+取消：pthread_cancel
+脱离：pthread_detach
+
+同步：
+1.信号量
+头文件 semaphore.h
+用法：sem_init(sem_t*,int,uint) 
+第2个参数 0表示不在进程共享 其余共享 
+第3个参数 初始值
+sem_post 值+1
+sem_wait 值-1 当值大于0才会执行 否则等待 直到大于0
+sem_trywait 非阻塞版本
+sem_destory
+
+2.互斥量
+头文件 pthread.h
+用法 pthread_mutex_init(pthread_mutex_t*,pthread_mutexattr_t*)
+属性控制 锁的行为
+pthread_mutex_lock  进行加锁 已经锁上则等待
+pthread_mutex_unlock 解锁
+pthread_mutex_destory
+加锁 解锁需在同一线程中
+
+线程
