@@ -1,0 +1,68 @@
+域：一般为 AF_INET
+类型： 流 数据报 SOCK_STREAM SOCK_DGRAM
+协议： 设0
+
+头文件：netinet/in.h  sys/socket.h
+
+API:bind
+返回值0成功 -1失败 
+errno EBADF 无效socket ENOTSOCK 不是socket EINVAL 已经bind过了
+
+listen
+返回0成功
+
+accept
+返回0成功 当为非阻塞模式时 错误可能为EWOULDBOLCK 即没连接
+
+connect
+返回0成功 当为非阻塞模式时 错误可能为EINPROGRESS 即在连接中
+EALREADY 此socket已经连接上一个了
+ETIMEOUT 超时
+ECONNREFUSED 被拒绝
+
+头文件：netdb.h
+gethostbyaddr
+gethostbyname
+
+头文件：unistd.h
+gethostname
+
+头文件：arpa/inet.h
+inet_ntoa inet_aton 对char* 和 inaddr之间转换
+
+socket选项：
+int setsockopt(socket,level,optname,optval,vallength) 成功返回0
+
+select:
+需要的头文件：sys/types.h sys/time.h
+api:FD_ZERO FD_SET FD_CLR FD_ISSET
+int select(int,fd_set,fd_set,fd_set,timeval) 查看是否有文件处于 可度 可写 错误 的状态
+返回处于这些状态的总数 -1表示错误
+
+select服务器简单应用：
+fd_set read_set,test_set;
+int server_fd = socket(AF_INET,SOCK_STREAM,0);
+bind(server_fd,sockaddr,length);
+FD_ZERO(&read_set);
+FD_SET(server_fd,&read_set);
+listen()
+run()
+{
+  test_set = read_set
+  下面应该都用test_set 因为fd可读时 将一直处于可读 所以应该用副本来执行
+  int nFD = select(MAXFDSIZE,read_set,0,0,0);
+  nFD>0
+  for(1,MAXFDSIZE) do
+    if fd == server_fd  表示有新连接
+      client_fd = accept();
+      FD_SET(client_fd,read_set);
+    else      表示客户端发消息
+      nread = read()
+      nread == 0  表示客户端关闭
+        close(client_fd)
+        FD_CLR(client_fd,read_set)
+ }
+ 
+ udp:
+ sendto
+ recvfrom
