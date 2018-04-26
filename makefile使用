@@ -1,0 +1,16 @@
+make命令 -k 发生错误继承 -n 打印make的信息 但不执行
+
+编写格式：
+
+依赖关系
+all:(空格)app1(空格)app2 ...
+app1:(空格)main.o(空格)1.o ...
+(tab)规则     gcc -o
+main.0:(空格).c(空格).cpp(空格).h ...
+(tab)规则     gcc -c
+
+
+在makefile添加命令
+label:
+则在make name label会执行label里的命令
+一般clean install
