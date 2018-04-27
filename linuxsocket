@@ -1,3 +1,8 @@
+错误情况
+我方       对方进程奔溃或正常关闭                   对方主机奔溃     路由器或通讯设备那边出故障
+发送数据   对方发送FIN关闭信息 内核保存处理了该信息   ETIMEDOUT       EHOSTUNREACH
+接收数据   对方发送FIN关闭信息 read返回0             无反应          无反应
+KeepAlive 同上                                     经过一段时间后 设ETIMEDOUT    经过一段时间后设EHOSTUNREACH
 函数域：一般为 AF_INET
 类型： 流 数据报 SOCK_STREAM SOCK_DGRAM
 协议： 设0
@@ -20,6 +25,8 @@ EALREADY 此socket已经连接上一个了
 ETIMEOUT 超时
 ECONNREFUSED 被拒绝
 
+read 返回>0成功 =0已关闭 -1则可能
+ECONNRESET ETIMEOUT等
 头文件：netdb.h
 gethostbyaddr
 gethostbyname
@@ -32,13 +39,28 @@ inet_ntoa inet_aton 对char* 和 inaddr之间转换
 
 socket选项：
 int setsockopt(socket,level,optname,optval,vallength) 成功返回0
-
+int getsockopt()
+常用：
+level                  optname
+SOL_SOCKET             SO_KEEPALIVE         是否周期性检测socket已关闭                       TCP 
+                      一般服务器总是设置此选项 否则客户端奔溃没有发送正常关闭信息 则服务器不知道 通过设置此值      
+                       SO_LINGER            当有数据没发送完 但调用close 是否延迟关闭         
+                       SO_BROADCADT         是否允许广播                                    UDP
+                       SO_RCVBUF SO_SEDBUF  设置缓冲区大小
+                       SO_RCVLOWAT SO_SEDLOWAT 设置值 当大于这个值才表示可读可写
+                       SO_REVTIMEO SO_SEDTIMEO 设置发送 接收超时时间
+                       SO_TYPE              socket类型 流式还是数据报
+IPPROTO_TCP            TCP_KEEPALIVE        设置判断是否还alive的秒数
+                       TCP_NODELAY          是否立即发送 否则会等到缓存充满一定的数据
 select:
 需要的头文件：sys/types.h sys/time.h
 api:FD_ZERO FD_SET FD_CLR FD_ISSET
 int select(int,fd_set,fd_set,fd_set,timeval) 查看是否有文件处于 可度 可写 错误 的状态
 返回处于这些状态的总数 -1表示错误
-
+select返回的情况：
+可读：1.accept有已就绪的连接 2.有可读数据 3.已关闭读0 4.socket发生错误
+可写：1.写到一半关闭  2.socket发送错误 3.有可写数据
+可设条件sockopt 当可读数据大于多少才返回 SO_REVLOWAT默认1 设备可写数据空间大于多少返回 SO_SNDLOWAT默认2048 意味着当我们底层有许多数据还没发送完成时 不会返回
 select服务器简单应用：
 fd_set read_set,test_set;
 int server_fd = socket(AF_INET,SOCK_STREAM,0);
@@ -63,6 +85,28 @@ run()
         FD_CLR(client_fd,read_set)
  }
  
+ 
+ poll:出错返回-1  时间到返回0 返回准备好的fd的数量
+ int poll(pollfd*,nfds,ntimeout) 0不堵塞 INFTIM永远阻塞 >0堵塞时间毫秒
+ pollfd{int fd;short interevent,short currevent) 感兴趣事件  当前发生事件
+ 事件：POLLIN可读 POLLOUT可写 POLLERR出错 POLLINVAL不是有效的文件描述符
+ poll服务器例子：
+ pollfd fds[max];
+ fds[0].fd = server_fd;
+ fds[0].interevent = POLLIN;
+ bind listen
+ run循环：
+ while(poll(fds,max,time) >= 0)
+    if fds[0].currevent & POLLIN 有连接
+        for fd in fds
+          fd.fd<0  fd.fd = accept()
+          fd.interevent = POLLIN
+    for 1,max-1 do
+      fds[i].fd < 0 表示无效
+        continue;
+      fds[i].currevent | POLLIN 有消息进来
+        int nread = read()
+        读到<0 =0 >0  <0表示出错 =0连接已关闭 都应当执行close
  udp:
  sendto
  recvfrom
