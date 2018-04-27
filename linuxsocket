@@ -1,7 +1,7 @@
-域：一般为 AF_INET
+函数域：一般为 AF_INET
 类型： 流 数据报 SOCK_STREAM SOCK_DGRAM
 协议： 设0
-
+读函数 在非阻塞 内核没数据时 返回EWOULDBLOCK
 头文件：netinet/in.h  sys/socket.h
 
 API:bind
