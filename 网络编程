@@ -1,0 +1,35 @@
+tcp:当一端 主动执行 close 会发生FIN分节 表示数据传输完毕  另一端 接收此信息 也关闭 会发生FIN分节 则主动端进行确认 当被动关闭也会发生FIN分节 例如进程奔溃
+
+tcp流程：
+服务端 listen 接收客户端的SYN_RECD 连接阶段  连接完后 数据传输阶段
+当客户端主动关闭时：客户端发生FIN 进入等待  服务器被动关闭 read返回0 服务器关闭 客户端确认
+当服务端主动关闭时：客户端进入TIME_WAIT状态 发送应答 服务端关闭
+
+主动关闭一方都会处于等待状态：等待最长1~4分钟
+为什么需要等待：
+1.关闭对方应知道 而不是我方处于 ‘休闲’状态
+2.防止未彻底关闭前 双方又重新连接
+
+连接：超时没收到服务器回应 指定地址端口没有在listen 指定地址没找到
+ETIMEOUT  ECONNREFUSED    EHOSTUNREACH/ENETUNREACH
+连接失败时 此socket将不可再用 应关闭
+发送连接 状态转换为 SYN_SENT  成功连接 将处于 ESTABLISHED
+
+bind:INADDR_ANY 端口0 让内核自动选择
+getsockname 可获得这些信息
+错误 EADDRINUSE 地址已使用
+
+listen:有个fdblock参数
+流程：接收到客户请求消息 会在待完成队列里 直到握手完成 放在完成队列 2个队列之和不超过参数 队列保留时间 默认75秒
+当调用accept时 完成队列才会 出列
+
+accept:返回已连接socket符号
+
+getsockname getpeername
+
+可能在阻塞函数调用时发生中断 则错误 会设为 EINTR
+例如
+while true
+if(accept(...) < 0
+  if errno == EINTR then
+    continue
