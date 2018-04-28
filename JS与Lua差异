@@ -1,0 +1,32 @@
+1.重点:    js里一切皆是对象                                         lua没有对象概念 通过表 而表像是一个容器可以容纳一切lua数据结构
+2.数据类型:js布尔.数字.字符串.对象.数组.undefined.null               lua布尔.数字(double,int).字符串.表(可以实现数组和对象功能).nil.函数.用户指针
+
+3.对象机制:js通过原型和原型链 对象都有__proto__ 函数对象prototype属性 lua表可分普通表和元表(带有元方法__index __newindex __call __add等)
+          js通过new关键字 生成对象__proto__指向函数对象的prototype   lua在() . : + -等在Lua都会产生元事件 是否有元表 元表里是否有这些元事件处理方法
+          js索引在自身找 继而在proto指向对象找
+          js继承依赖于函数对象                                      lua继承依赖于表和元事件
+
+js new关键字
+function test(name)
+{
+  this.name = name;
+}
+var obj = new test('kk');
+test函数自带__proto__ 指向 内置Function.prototype(__proto__指向Object.prototype)
+obj __proto__ 指向 test.prototype
+向test传入obj对象 执行test(this,name)   this指向obj
+总结 函数有c++的class功能 通过new生成实例 继承是通过__proto__和prototype属性
+js所有数据类型都是对象 即他们都有__proto__属性指向 他们自己的元方法
+js里对象另一种 
+直接  var obj ={field1:value1,field2:value2,...}
+
+__proto__属性规定了去哪里找 引擎默认指向一个prototype(函数对象总是有此属性） 如果指向prototype有__proto__属性的话 继续找
+误区：
+function base(){} 在引擎内核把 base.__proto__对象指向Function.prototype(prototype里的属性__proto__指向Object)
+base.prototype.name = 'base'
+c = new base() 引擎内核把c.__proto__指向base.prototype 所以调用c.name 当c对象没有name属性 会去_proto__指向对象里找 在这里就是base.prototype
+误区重点 base.prototype里的__proto__指向是一个空对象 而不是base.__proto__
+所以当给FUnction.prototype 赋值 base可以索引到 而 c索引不到
+所以不要以为 test继承Function 从test生成的实例能访问Function的prototype里属性 因为test.prototype里的__proto__没有指向Function的prototype
+从test可以访问Function prototype属性
+当然我们可以自己把prototype里的__proto__指向父类的prototype属性
